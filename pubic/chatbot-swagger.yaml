@@ -1,0 +1,634 @@
+openapi: 3.0.3
+info:
+  title: Finda Chatbot API
+  description: |
+    AI-powered shopping assistant for Finda platform. This API provides intelligent 
+    shopping assistance through multiple channels:
+    
+    🤖 **Text Chat**: Natural language product/service search and recommendations
+    🎤 **Voice Messages**: Voice-to-text transcription with voice responses
+    📸 **Image Search**: Visual product recognition and matching
+    ⚙️ **Voice Settings**: Customizable voice preferences
+    
+    The chatbot can:
+    - Search Finda's database for products and services
+    - Provide external store suggestions (Amazon, Jumia, etc.)
+    - Handle multiple languages and intents
+    - Process multimedia inputs (voice, images)
+    - Maintain conversation history and context
+    
+    **Key Features:**
+    - Multi-language support
+    - Intent recognition (greetings, browsing, confirmations)
+    - Database search with rating-based ranking
+    - Gemini AI integration for advanced queries
+    - Multimedia processing capabilities
+  version: 2.0.0
+  contact:
+    name: Finda Chatbot Support
+    email: ichukwugozirim@gmail.com
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://finda-backend.onrender.com
+    description: Production server
+  - url: http://localhost:8000
+    description: Local development
+
+tags:
+  - name: Text Chat
+    description: Traditional text-based chat interactions
+  - name: Voice Chat
+    description: Voice message processing and responses
+  - name: Image Search
+    description: Image-based product search and recognition
+  - name: Voice Settings
+    description: User voice preferences and configuration
+  - name: Authentication
+    description: Chatbot-specific authentication endpoints
+
+paths:
+  # Text Chat API
+  /chatbot/api/:
+    post:
+      tags:
+        - Text Chat
+      summary: Send text message to chatbot
+      description: |
+        Send a text message to the Finda shopping assistant. The bot will:
+        
+        **Intent Recognition:**
+        - 👋 **Greetings**: Welcomes users warmly
+        - 🙏 **Thanks**: Acknowledges gratitude 
+        - 🛍️ **Browse**: Shows available categories
+        - ✅ **Confirmations**: Handles yes/no responses for external suggestions
+        
+        **Search Process:**
+        1. Search Finda's database for matching products/services
+        2. Return top 3 results ranked by ratings
+        3. Offer external store suggestions if requested
+        4. Use AI fallback for complex queries or no matches
+        
+        **Supported Languages:** English, French, Spanish, German, Italian, Portuguese, Dutch, Russian, Arabic, Chinese, Japanese, Korean, Hindi, Yoruba, Igbo, Hausa, Swahili
+      security:
+        - TokenAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - message
+              properties:
+                message:
+                  type: string
+                  description: The user's message to the chatbot
+                  example: "I'm looking for Nike shoes"
+                  minLength: 1
+                  maxLength: 1000
+      responses:
+        "200":
+          description: Successful response with bot reply
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reply:
+                    type: string
+                    description: The chatbot's response
+                    example: "I found these on Finda:\n- Nike Air Max 270 — ₦45,000\n  Link: https://yourdomain.com/products/123/\n\nWould you also like suggestions from external stores (e.g., Amazon, Jumia)?"
+                examples:
+                  greeting_response:
+                    summary: Response to greeting
+                    value:
+                      reply: "Hello, welcome to Finda! What can we help you find today?"
+                  products_found:
+                    summary: Products found in database
+                    value:
+                      reply: "I found these on Finda:\n- Nike Air Max 270 — ₦45,000\n  Link: https://yourdomain.com/products/123/\n- Adidas Ultraboost — ₦52,000\n  Link: https://yourdomain.com/products/124/\n\nWould you also like suggestions from external stores (e.g., Amazon, Jumia)?"
+                  browse_categories:
+                    summary: Category browsing response
+                    value:
+                      reply: "Sure! Here are some categories you can explore:\n- Electronics\n- Fashion\n- Health & Beauty\n- Home & Garden\n\nOr just type in what you're looking for (e.g., 'Nike shoes', 'barber services').\n💡 Tip: You can also send me a photo of an item or record a voice message!"
+                  external_suggestions:
+                    summary: External store suggestions (AI-powered)
+                    value:
+                      reply: "Here are some external suggestions for running shoes:\n1. Amazon: Nike Revolution 5 - $65\n2. Jumia: Adidas Lite Racer - ₦35,000\n3. Konga: Puma Enzo 2 - ₦28,000"
+        "400":
+          description: Bad request – empty or invalid message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "401":
+          description: Unauthorized – invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Voice Chat API
+  /chatbot/api/voice/:
+    post:
+      tags:
+        - Voice Chat
+      summary: Send voice message to chatbot
+      description: |
+        Upload an audio file for voice-based interaction. The system will:
+        
+        **Processing Steps:**
+        1. 🎤 **Transcribe** audio to text using AI
+        2. 🤖 **Process** text using same logic as text chat
+        3. 🗣️ **Generate** voice response (if enabled in settings)
+        4. 💾 **Save** conversation with audio metadata
+        
+        **Supported Audio Formats:** MP3, WAV, M4A, OGG
+        **Max File Size:** 10MB
+        **Languages:** Auto-detection with multi-language support
+      security:
+        - TokenAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - audio
+              properties:
+                audio:
+                  type: string
+                  format: binary
+                  description: Audio file containing voice message
+      responses:
+        "200":
+          description: Voice message processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transcript:
+                    type: string
+                    description: Transcribed text from audio
+                    example: "I'm looking for wireless headphones"
+                  reply:
+                    type: string
+                    description: Bot's text response
+                    example: "I found these wireless headphones on Finda:\n- Sony WH-1000XM4 — ₦85,000\n- Apple AirPods Pro — ₦95,000"
+                  voice_response_url:
+                    type: string
+                    format: uri
+                    nullable: true
+                    description: URL to generated voice response (if voice is enabled)
+                    example: "https://yourdomain.com/media/voice_responses/response_123.mp3"
+                  message_id:
+                    type: integer
+                    description: ID of saved chat message
+                    example: 456
+        "400":
+          description: No audio file provided or transcription failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "500":
+          description: Voice processing error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Image Search API
+  /chatbot/api/image/:
+    post:
+      tags:
+        - Image Search
+      summary: Search products using image
+      description: |
+        Upload an image to search for similar products. The system will:
+        
+        **Processing Pipeline:**
+        1. 📸 **Analyze** image using Gemini Vision AI
+        2. 🔍 **Extract** product features, colors, brands, categories
+        3. 🏪 **Search** Finda database for matching products
+        4. 📊 **Rank** results by relevance and ratings
+        5. 🤖 **Fallback** to AI suggestions if no local matches
+        
+        **Supported Formats:** JPEG, PNG, GIF, WebP
+        **Max File Size:** 5MB
+        **Recognition Capabilities:** Products, brands, colors, styles, categories
+      security:
+        - TokenAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - image
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: Image file to analyze
+                query:
+                  type: string
+                  description: Optional query to guide image analysis
+                  default: "What products are in this image?"
+                  example: "Find similar shoes in this image"
+      responses:
+        "200":
+          description: Image processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  image_analysis:
+                    type: string
+                    description: AI analysis of the image
+                    example: "I can see a pair of white Nike Air Force 1 sneakers with a classic low-top design. They appear to be leather with the iconic Nike swoosh logo."
+                  reply:
+                    type: string
+                    description: Bot's response with search results
+                    example: "Based on your image, I found these on Finda:\n- Nike Air Force 1 White — ₦42,000\n  Link: https://yourdomain.com/products/789/\n\nWould you also like suggestions from external stores based on this image?"
+                  local_products_found:
+                    type: integer
+                    description: Number of matching products found in Finda database
+                    example: 2
+                  message_id:
+                    type: integer
+                    description: ID of saved chat message
+                    example: 789
+        "400":
+          description: No image provided
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "500":
+          description: Image processing error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Voice Settings API
+  /chatbot/api/voice-settings/:
+    get:
+      tags:
+        - Voice Settings
+      summary: Get user voice preferences
+      description: Retrieve current voice settings for the authenticated user
+      security:
+        - TokenAuth: []
+      responses:
+        "200":
+          description: Voice settings retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VoiceSettings'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags:
+        - Voice Settings
+      summary: Update user voice preferences
+      description: |
+        Update voice settings for the authenticated user. These settings affect:
+        - Voice response generation
+        - Language selection for TTS
+        - Speech speed preferences
+        - Voice feature enable/disable
+      security:
+        - TokenAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VoiceSettingsUpdate'
+      responses:
+        "200":
+          description: Voice settings updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VoiceSettings'
+        "400":
+          description: Invalid settings data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Authentication API
+  /chatbot/api-token-auth/:
+    post:
+      tags:
+        - Authentication
+      summary: Authenticate user for chatbot
+      description: |
+        Alternative authentication endpoint for chatbot-specific access.
+        Accepts email and password, returns authentication token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: User's email address
+                  example: "user@example.com"
+                password:
+                  type: string
+                  description: User's password
+                  example: "securepassword123"
+      responses:
+        "200":
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: Authentication token for API access
+                    example: "9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b"
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 123
+                      email:
+                        type: string
+                        example: "user@example.com"
+                      name:
+                        type: string
+                        example: "John Doe"
+        "400":
+          description: Missing email or password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    TokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: "Token-based authentication. Use format: `Token <your-token>`"
+
+  schemas:
+    ChatMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique message identifier
+          example: 123
+        user_input:
+          type: string
+          description: User's original message/input
+          example: "I'm looking for wireless headphones"
+        bot_response:
+          type: string
+          description: Bot's response to the user
+          example: "I found these wireless headphones on Finda..."
+        timestamp:
+          type: string
+          format: date-time
+          description: When the message was created
+          example: "2024-01-15T14:30:00Z"
+        is_voice_message:
+          type: boolean
+          description: Whether this was a voice message
+          example: false
+        is_image_message:
+          type: boolean
+          description: Whether this was an image search
+          example: false
+        audio_file:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to uploaded audio file
+          example: "https://yourdomain.com/media/voice_messages/msg_123.mp3"
+        image_file:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to uploaded image file
+          example: "https://yourdomain.com/media/image_searches/img_123.jpg"
+        transcript:
+          type: string
+          description: Transcribed text from voice message
+          example: "Looking for wireless headphones"
+        image_analysis:
+          type: string
+          description: AI analysis results from image
+          example: "White Nike sneakers with swoosh logo"
+        voice_response_url:
+          type: string
+          format: uri
+          description: URL to generated voice response
+          example: "https://yourdomain.com/media/voice_responses/resp_123.mp3"
+
+    VoiceSettings:
+      type: object
+      properties:
+        preferred_language:
+          type: string
+          description: Preferred language for voice responses
+          enum: 
+            - "en"
+            - "fr" 
+            - "es"
+            - "de"
+            - "it"
+            - "pt"
+            - "ru"
+            - "ar"
+            - "zh"
+            - "ja"
+            - "ko"
+            - "hi"
+          default: "en"
+          example: "en"
+        voice_speed:
+          type: number
+          format: float
+          description: Speech speed multiplier (0.5 = slow, 1.0 = normal, 2.0 = fast)
+          minimum: 0.5
+          maximum: 2.0
+          default: 1.0
+          example: 1.0
+        voice_enabled:
+          type: boolean
+          description: Whether voice responses are enabled
+          default: true
+          example: true
+
+    VoiceSettingsUpdate:
+      type: object
+      properties:
+        preferred_language:
+          type: string
+          description: Preferred language for voice responses
+          enum: 
+            - "en"
+            - "fr"
+            - "es" 
+            - "de"
+            - "it"
+            - "pt"
+            - "ru"
+            - "ar"
+            - "zh"
+            - "ja"
+            - "ko"
+            - "hi"
+          example: "en"
+        voice_speed:
+          type: number
+          format: float
+          description: Speech speed multiplier
+          minimum: 0.5
+          maximum: 2.0
+          example: 1.2
+        voice_enabled:
+          type: boolean
+          description: Enable or disable voice responses
+          example: true
+
+    Product:
+      type: object
+      description: Simplified product representation in chat responses
+      properties:
+        id:
+          type: integer
+          example: 123
+        name:
+          type: string
+          example: "Nike Air Max 270"
+        price:
+          type: number
+          example: 45000
+        url:
+          type: string
+          format: uri
+          example: "https://yourdomain.com/products/123/"
+        rating:
+          type: number
+          format: float
+          example: 4.5
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "No image provided"
+        detail:
+          type: string
+          description: Detailed error information
+          example: "Please send a non-empty message."
+
+    ValidationError:
+      type: object
+      properties:
+        field_name:
+          type: array
+          items:
+            type: string
+          description: List of validation errors for the field
+          example: ["This field is required."]
+      additionalProperties:
+        type: array
+        items:
+          type: string
+      example:
+        preferred_language: ["Select a valid choice. 'invalid' is not one of the available choices."]
+        voice_speed: ["Ensure this value is greater than or equal to 0.5."]
+
+# Example conversations for testing
+examples:
+  greeting_conversation:
+    summary: "Basic greeting flow"
+    value:
+      user: "Hi there!"
+      bot: "Hello, welcome to Finda! What can we help you find today?"
+      
+  product_search:
+    summary: "Product search with results"
+    value:
+      user: "I need iPhone 14"
+      bot: "I found these on Finda:\n- iPhone 14 Pro — ₦450,000\n  Link: https://yourdomain.com/products/123/\n\nWould you also like suggestions from external stores?"
+      
+  browse_request:
+    summary: "Category browsing"
+    value:
+      user: "What do you have?"
+      bot: "Sure! Here are some categories you can explore:\n- Electronics\n- Fashion\n- Health & Beauty\n\nOr just type in what you're looking for!"
+      
+  voice_interaction:
+    summary: "Voice message flow"
+    value:
+      audio_upload: "user_voice.mp3"
+      transcript: "Looking for gaming laptop"
+      bot_response: "I found these gaming laptops on Finda..."
+      voice_response_url: "https://yourdomain.com/media/voice_responses/resp_456.mp3"
+      
+  image_search:
+    summary: "Image search flow"  
+    value:
+      image_upload: "shoe_photo.jpg"
+      analysis: "White Nike Air Force 1 sneakers"
+      bot_response: "Based on your image, I found these on Finda:\n- Nike Air Force 1 White — ₦42,000"
