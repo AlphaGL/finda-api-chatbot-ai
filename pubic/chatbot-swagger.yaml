@@ -51,7 +51,7 @@ tags:
 
 paths:
   # Text Chat API
-  /chatbot/api/:
+  /chatbot/api/chat/:
     post:
       tags:
         - Text Chat
