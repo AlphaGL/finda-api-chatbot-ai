@@ -49,6 +49,7 @@ tags:
   - name: Authentication
     description: Chatbot-specific authentication endpoints
 
+
 paths:
   # Text Chat API
   /chatbot/api/chat/:
