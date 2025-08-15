@@ -2,28 +2,31 @@ openapi: 3.0.3
 info:
   title: Finda Chatbot API
   description: |
-    AI-powered shopping assistant for Finda platform. This API provides intelligent 
-    shopping assistance through multiple channels:
+    AI-powered shopping assistant for Finda platform with advanced conversation management,
+    analytics, and multimedia support.
     
-    🤖 **Text Chat**: Natural language product/service search and recommendations
+    🤖 **Advanced Chat**: Natural language processing with context awareness
     🎤 **Voice Messages**: Voice-to-text transcription with voice responses
     📸 **Image Search**: Visual product recognition and matching
-    ⚙️ **Voice Settings**: Customizable voice preferences
+    📊 **Analytics**: Comprehensive conversation and performance analytics
+    ⚙️ **Configuration**: Admin-configurable bot settings
+    🔍 **Smart Search**: Local database + external web search integration
     
-    The chatbot can:
-    - Search Finda's database for products and services
-    - Provide external store suggestions (Amazon, Jumia, etc.)
-    - Handle multiple languages and intents
-    - Process multimedia inputs (voice, images)
-    - Maintain conversation history and context
+    **New Features:**
+    - Session-based conversations with history
+    - Advanced search routing and analytics
+    - Feedback system with detailed ratings
+    - Admin dashboard and configuration management
+    - Quick search with suggestions/autocomplete
+    - File upload handling for images and voice
+    - Health monitoring and status endpoints
     
-    **Key Features:**
-    - Multi-language support
-    - Intent recognition (greetings, browsing, confirmations)
-    - Database search with rating-based ranking
-    - Gemini AI integration for advanced queries
-    - Multimedia processing capabilities
-  version: 2.0.0
+    **Multi-channel Support:**
+    - REST API for direct integration
+    - Embeddable widget for websites
+    - Admin interface for management
+    
+  version: 2.1.0
   contact:
     name: Finda Chatbot Support
     email: ichukwugozirim@gmail.com
@@ -38,43 +41,79 @@ servers:
     description: Local development
 
 tags:
-  - name: Text Chat
-    description: Traditional text-based chat interactions
-  - name: Voice Chat
-    description: Voice message processing and responses
-  - name: Image Search
-    description: Image-based product search and recognition
-  - name: Voice Settings
-    description: User voice preferences and configuration
-  - name: Authentication
-    description: Chatbot-specific authentication endpoints
-
+  - name: Chat API
+    description: Main chat functionality with conversation management
+  - name: Quick Search
+    description: Fast search without full conversation context
+  - name: File Uploads
+    description: Image and voice file processing
+  - name: Conversations
+    description: Session and conversation history management
+  - name: Feedback
+    description: User feedback and rating system
+  - name: Analytics
+    description: Bot performance and usage analytics (Admin)
+  - name: System
+    description: Health checks and system status
+  - name: Admin
+    description: Administrative endpoints and configuration
+  - name: Widget
+    description: Embeddable chat widget
 
 paths:
-  # Text Chat API
+  # Main Chat API
   /chatbot/api/chat/:
+    get:
+      tags:
+        - Chat API
+      summary: Get API information
+      description: Returns basic API information and available endpoints
+      responses:
+        "200":
+          description: API information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "AI Chatbot API is running"
+                  endpoints:
+                    type: object
+                  version:
+                    type: string
+                    example: "1.0.0"
+
     post:
       tags:
-        - Text Chat
-      summary: Send text message to chatbot
+        - Chat API
+      summary: Send message to chatbot
       description: |
-        Send a text message to the Finda shopping assistant. The bot will:
+        Send a message to the AI chatbot. Supports:
         
-        **Intent Recognition:**
-        - 👋 **Greetings**: Welcomes users warmly
-        - 🙏 **Thanks**: Acknowledges gratitude 
-        - 🛍️ **Browse**: Shows available categories
-        - ✅ **Confirmations**: Handles yes/no responses for external suggestions
+        **Message Types:**
+        - 📝 **Text**: Regular chat messages
+        - 📸 **Image**: Image-based product search
+        - 🎤 **Voice**: Voice note transcription and processing
+        - 📎 **File**: File upload and analysis
         
-        **Search Process:**
-        1. Search Finda's database for matching products/services
-        2. Return top 3 results ranked by ratings
-        3. Offer external store suggestions if requested
-        4. Use AI fallback for complex queries or no matches
+        **Processing Flow:**
+        1. Session management (create/resume conversations)
+        2. Intent detection and entity extraction
+        3. Smart search routing (local DB + external web)
+        4. Response generation with context awareness
+        5. Analytics and feedback tracking
         
-        **Supported Languages:** English, French, Spanish, German, Italian, Portuguese, Dutch, Russian, Arabic, Chinese, Japanese, Korean, Hindi, Yoruba, Igbo, Hausa, Swahili
-      security:
-        - TokenAuth: []
+        **Response Features:**
+        - Conversation context preservation
+        - Search result aggregation
+        - Suggested follow-up actions
+        - Optional text-to-speech
+        - Performance metadata
       requestBody:
         required: true
         content:
@@ -86,151 +125,230 @@ paths:
               properties:
                 message:
                   type: string
-                  description: The user's message to the chatbot
-                  example: "I'm looking for Nike shoes"
+                  description: User's message content
+                  example: "I'm looking for wireless earbuds under 50k"
                   minLength: 1
-                  maxLength: 1000
-      responses:
-        "200":
-          description: Successful response with bot reply
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  reply:
-                    type: string
-                    description: The chatbot's response
-                    example: "I found these on Finda:\n- Nike Air Max 270 — ₦45,000\n  Link: https://yourdomain.com/products/123/\n\nWould you also like suggestions from external stores (e.g., Amazon, Jumia)?"
-                examples:
-                  greeting_response:
-                    summary: Response to greeting
-                    value:
-                      reply: "Hello, welcome to Finda! What can we help you find today?"
-                  products_found:
-                    summary: Products found in database
-                    value:
-                      reply: "I found these on Finda:\n- Nike Air Max 270 — ₦45,000\n  Link: https://yourdomain.com/products/123/\n- Adidas Ultraboost — ₦52,000\n  Link: https://yourdomain.com/products/124/\n\nWould you also like suggestions from external stores (e.g., Amazon, Jumia)?"
-                  browse_categories:
-                    summary: Category browsing response
-                    value:
-                      reply: "Sure! Here are some categories you can explore:\n- Electronics\n- Fashion\n- Health & Beauty\n- Home & Garden\n\nOr just type in what you're looking for (e.g., 'Nike shoes', 'barber services').\n💡 Tip: You can also send me a photo of an item or record a voice message!"
-                  external_suggestions:
-                    summary: External store suggestions (AI-powered)
-                    value:
-                      reply: "Here are some external suggestions for running shoes:\n1. Amazon: Nike Revolution 5 - $65\n2. Jumia: Adidas Lite Racer - ₦35,000\n3. Konga: Puma Enzo 2 - ₦28,000"
-        "400":
-          description: Bad request – empty or invalid message
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        "401":
-          description: Unauthorized – invalid or missing token
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  # Voice Chat API
-  /chatbot/api/voice/:
-    post:
-      tags:
-        - Voice Chat
-      summary: Send voice message to chatbot
-      description: |
-        Upload an audio file for voice-based interaction. The system will:
-        
-        **Processing Steps:**
-        1. 🎤 **Transcribe** audio to text using AI
-        2. 🤖 **Process** text using same logic as text chat
-        3. 🗣️ **Generate** voice response (if enabled in settings)
-        4. 💾 **Save** conversation with audio metadata
-        
-        **Supported Audio Formats:** MP3, WAV, M4A, OGG
-        **Max File Size:** 10MB
-        **Languages:** Auto-detection with multi-language support
-      security:
-        - TokenAuth: []
-      requestBody:
-        required: true
-        content:
+                  maxLength: 2000
+                message_type:
+                  type: string
+                  enum: ["text", "image", "voice", "file"]
+                  default: "text"
+                  description: Type of message being sent
+                session_id:
+                  type: string
+                  format: uuid
+                  description: Session ID to continue existing conversation
+                  example: "123e4567-e89b-12d3-a456-426614174000"
+                language:
+                  type: string
+                  default: "en"
+                  example: "en"
+                  description: Language code for processing
+                enable_tts:
+                  type: boolean
+                  default: false
+                  description: Generate voice response
+                user_location:
+                  type: object
+                  description: User's location context
+                  properties:
+                    country:
+                      type: string
+                      example: "Nigeria"
+                    city:
+                      type: string
+                      example: "Lagos"
+                    coordinates:
+                      type: object
+                      properties:
+                        lat:
+                          type: number
+                        lng:
+                          type: number
           multipart/form-data:
             schema:
               type: object
-              required:
-                - audio
               properties:
-                audio:
+                message:
+                  type: string
+                  description: User's message content
+                file:
                   type: string
                   format: binary
-                  description: Audio file containing voice message
+                  description: File upload (image, voice, or document)
+                message_type:
+                  type: string
+                  enum: ["image", "voice", "file"]
+                session_id:
+                  type: string
+                  format: uuid
+                language:
+                  type: string
+                enable_tts:
+                  type: boolean
       responses:
         "200":
-          description: Voice message processed successfully
+          description: Successful chat response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+              examples:
+                text_response:
+                  summary: Text message response
+                  value:
+                    success: true
+                    message_id: "456e7890-e89b-12d3-a456-426614174001"
+                    session_id: "123e4567-e89b-12d3-a456-426614174000"
+                    response: "I found these wireless earbuds on Finda:\n\n• Sony WF-1000XM4 — ₦45,000\n• Apple AirPods Pro — ₦52,000\n\nWould you like to see more options or get external store suggestions?"
+                    message_type: "text"
+                    metadata:
+                      processing_time: 1.2
+                      search_strategy: "hybrid"
+                      confidence_score: 0.95
+                      services_used: ["local_search", "gemini_web"]
+                      has_external_results: true
+                    search_results:
+                      local:
+                        products: 
+                          - id: 123
+                            name: "Sony WF-1000XM4"
+                            price: 45000
+                            formatted_price: "₦45,000"
+                            url: "https://finda.com/products/123/"
+                        services: []
+                        total: 2
+                      external:
+                        products:
+                          - title: "Sony WF-1000XM4"
+                            url: "https://amazon.com/product/xyz"
+                            price: "$199"
+                            source: "Amazon"
+                        services: []
+                        total: 5
+                    suggested_actions:
+                      - action: "compare_products"
+                        label: "Compare these products"
+                        description: "Get a detailed comparison"
+                    timestamp: "2025-08-15T14:30:00Z"
+                
+                image_response:
+                  summary: Image search response
+                  value:
+                    success: true
+                    message_id: "789e0123-e89b-12d3-a456-426614174002"
+                    session_id: "123e4567-e89b-12d3-a456-426614174000"
+                    response: "Based on your image, I can see white Nike Air Force 1 sneakers. Here's what I found:\n\n• Nike Air Force 1 White — ₦42,000\n• Similar white sneakers — ₦35,000"
+                    message_type: "text"
+                    metadata:
+                      processing_time: 2.1
+                      search_strategy: "image_analysis"
+                      confidence_score: 0.88
+                      image_analysis: "White Nike Air Force 1 sneakers with classic design"
+                
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Quick Search
+  /chatbot/api/search/:
+    post:
+      tags:
+        - Quick Search
+      summary: Quick search without conversation context
+      description: |
+        Perform a quick search without maintaining conversation state.
+        Ideal for:
+        - Search bars and autocomplete
+        - Quick product/service lookups
+        - API integrations without full chat
+        
+        Returns structured search results from both local database and external sources.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - message
+              properties:
+                message:
+                  type: string
+                  description: Search query
+                  example: "gaming laptops"
+                  maxLength: 200
+                category:
+                  type: string
+                  description: Optional category filter
+                  example: "electronics"
+                location:
+                  type: object
+                  description: Location context for search
+                price_range:
+                  type: object
+                  description: Price range filter
+                  properties:
+                    min:
+                      type: number
+                    max:
+                      type: number
+                    currency:
+                      type: string
+                      default: "NGN"
+                search_type:
+                  type: string
+                  enum: ["product", "service", "both"]
+                  default: "both"
+      responses:
+        "200":
+          description: Search results
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  transcript:
+                  success:
+                    type: boolean
+                  query:
                     type: string
-                    description: Transcribed text from audio
-                    example: "I'm looking for wireless headphones"
-                  reply:
+                  response:
                     type: string
-                    description: Bot's text response
-                    example: "I found these wireless headphones on Finda:\n- Sony WH-1000XM4 — ₦85,000\n- Apple AirPods Pro — ₦95,000"
-                  voice_response_url:
-                    type: string
-                    format: uri
-                    nullable: true
-                    description: URL to generated voice response (if voice is enabled)
-                    example: "https://yourdomain.com/media/voice_responses/response_123.mp3"
-                  message_id:
-                    type: integer
-                    description: ID of saved chat message
-                    example: 456
-        "400":
-          description: No audio file provided or transcription failed
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        "500":
-          description: Voice processing error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+                  results_count:
+                    type: object
+                    properties:
+                      local:
+                        type: integer
+                      external:
+                        type: integer
+                  processing_time:
+                    type: number
 
-  # Image Search API
-  /chatbot/api/image/:
+  # File Upload Endpoints
+  /chatbot/api/upload/image/:
     post:
       tags:
-        - Image Search
-      summary: Search products using image
+        - File Uploads
+      summary: Upload image for analysis
       description: |
-        Upload an image to search for similar products. The system will:
+        Upload an image for product recognition and search.
         
-        **Processing Pipeline:**
-        1. 📸 **Analyze** image using Gemini Vision AI
-        2. 🔍 **Extract** product features, colors, brands, categories
-        3. 🏪 **Search** Finda database for matching products
-        4. 📊 **Rank** results by relevance and ratings
-        5. 🤖 **Fallback** to AI suggestions if no local matches
+        **Processing:**
+        1. Image validation and security checks
+        2. AI-powered visual analysis
+        3. Product/service identification
+        4. Similar item search in database
         
-        **Supported Formats:** JPEG, PNG, GIF, WebP
-        **Max File Size:** 5MB
-        **Recognition Capabilities:** Products, brands, colors, styles, categories
-      security:
-        - TokenAuth: []
+        **Supported:** JPEG, PNG, GIF, WebP, BMP (max 10MB)
       requestBody:
         required: true
         content:
@@ -244,11 +362,10 @@ paths:
                   type: string
                   format: binary
                   description: Image file to analyze
-                query:
+                message:
                   type: string
-                  description: Optional query to guide image analysis
-                  default: "What products are in this image?"
-                  example: "Find similar shoes in this image"
+                  description: Optional context message
+                  example: "Find similar products"
       responses:
         "200":
           description: Image processed successfully
@@ -257,111 +374,151 @@ paths:
               schema:
                 type: object
                 properties:
+                  success:
+                    type: boolean
                   image_analysis:
+                    type: object
+                    description: AI analysis results
+                  message:
                     type: string
-                    description: AI analysis of the image
-                    example: "I can see a pair of white Nike Air Force 1 sneakers with a classic low-top design. They appear to be leather with the iconic Nike swoosh logo."
-                  reply:
-                    type: string
-                    description: Bot's response with search results
-                    example: "Based on your image, I found these on Finda:\n- Nike Air Force 1 White — ₦42,000\n  Link: https://yourdomain.com/products/789/\n\nWould you also like suggestions from external stores based on this image?"
-                  local_products_found:
-                    type: integer
-                    description: Number of matching products found in Finda database
-                    example: 2
-                  message_id:
-                    type: integer
-                    description: ID of saved chat message
-                    example: 789
-        "400":
-          description: No image provided
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        "500":
-          description: Image processing error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
 
-  # Voice Settings API
-  /chatbot/api/voice-settings/:
+  /chatbot/api/upload/voice/:
+    post:
+      tags:
+        - File Uploads
+      summary: Upload voice note for transcription
+      description: |
+        Upload voice note for transcription and processing.
+        
+        **Processing:**
+        1. Audio validation and format checking
+        2. Speech-to-text transcription
+        3. Language detection
+        4. Audio quality analysis
+        
+        **Supported:** MP3, WAV, OGG, WebM, MP4, M4A, FLAC (max 25MB)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - voice
+              properties:
+                voice:
+                  type: string
+                  format: binary
+                  description: Voice file to transcribe
+                language:
+                  type: string
+                  default: "en"
+                  description: Expected language (auto-detected if not provided)
+      responses:
+        "200":
+          description: Voice processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  transcription:
+                    type: object
+                    properties:
+                      text:
+                        type: string
+                      confidence:
+                        type: number
+                      language:
+                        type: string
+                  audio_info:
+                    type: object
+                    properties:
+                      duration:
+                        type: number
+                      format:
+                        type: string
+                      quality:
+                        type: string
+
+  # Conversation Management
+  /chatbot/api/conversation/{session_id}/:
     get:
       tags:
-        - Voice Settings
-      summary: Get user voice preferences
-      description: Retrieve current voice settings for the authenticated user
-      security:
-        - TokenAuth: []
+        - Conversations
+      summary: Get conversation history
+      description: |
+        Retrieve conversation history for a specific session with pagination.
+        
+        **Features:**
+        - Message threading and context
+        - Search result tracking
+        - Feedback integration
+        - Performance metrics
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Chat session ID
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Page number for pagination
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
+          description: Number of messages per page
       responses:
         "200":
-          description: Voice settings retrieved successfully
+          description: Conversation history retrieved
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/VoiceSettings'
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  session:
+                    $ref: '#/components/schemas/ChatSession'
+                  messages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ChatMessage'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        "403":
+          description: Access denied
+        "404":
+          description: Session not found
 
+  # Feedback System
+  /chatbot/api/feedback/:
     post:
       tags:
-        - Voice Settings
-      summary: Update user voice preferences
+        - Feedback
+      summary: Submit feedback for bot response
       description: |
-        Update voice settings for the authenticated user. These settings affect:
-        - Voice response generation
-        - Language selection for TTS
-        - Speech speed preferences
-        - Voice feature enable/disable
-      security:
-        - TokenAuth: []
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/VoiceSettingsUpdate'
-      responses:
-        "200":
-          description: Voice settings updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/VoiceSettings'
-        "400":
-          description: Invalid settings data
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ValidationError'
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  # Authentication API
-  /chatbot/api-token-auth/:
-    post:
-      tags:
-        - Authentication
-      summary: Authenticate user for chatbot
-      description: |
-        Alternative authentication endpoint for chatbot-specific access.
-        Accepts email and password, returns authentication token.
+        Submit detailed feedback for chatbot responses.
+        
+        **Feedback Types:**
+        - 👍/👎 **Quick feedback**: Simple thumbs up/down
+        - ⭐ **Ratings**: 1-5 star ratings with categories
+        - 💬 **Comments**: Detailed text feedback
+        
+        **Rating Categories:**
+        - Accuracy: How accurate was the response?
+        - Helpfulness: How helpful was the response?
+        - Speed: How fast was the response?
       requestBody:
         required: true
         content:
@@ -369,54 +526,457 @@ paths:
             schema:
               type: object
               required:
-                - email
-                - password
+                - message_id
+                - feedback_type
               properties:
-                email:
+                message_id:
                   type: string
-                  format: email
-                  description: User's email address
-                  example: "user@example.com"
-                password:
+                  format: uuid
+                  description: ID of the message being rated
+                feedback_type:
                   type: string
-                  description: User's password
-                  example: "securepassword123"
+                  enum: ["thumbs_up", "thumbs_down", "rating", "comment"]
+                  description: Type of feedback
+                rating:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                  description: Overall rating (required for rating type)
+                comment:
+                  type: string
+                  maxLength: 1000
+                  description: Text feedback (required for comment type)
+                accuracy_rating:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                  description: Accuracy rating
+                helpfulness_rating:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                  description: Helpfulness rating
+                speed_rating:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                  description: Response speed rating
       responses:
         "200":
-          description: Authentication successful
+          description: Feedback submitted successfully
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  token:
+                  success:
+                    type: boolean
+                  message:
                     type: string
-                    description: Authentication token for API access
-                    example: "9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b"
-                  user:
+                  feedback_id:
+                    type: string
+                    format: uuid
+                  created:
+                    type: boolean
+                    description: Whether feedback was newly created or updated
+
+  # Search Suggestions
+  /chatbot/api/suggestions/:
+    get:
+      tags:
+        - Quick Search
+      summary: Get search suggestions and autocomplete
+      description: |
+        Get search suggestions based on partial query input.
+        
+        **Suggestion Sources:**
+        - Popular search terms
+        - Product/service categories
+        - Historical user queries
+        - Trending searches
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+          description: Partial search query
+          example: "nike"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+            maximum: 20
+          description: Maximum number of suggestions
+      responses:
+        "200":
+          description: Search suggestions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  query:
+                    type: string
+                  suggestions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        text:
+                          type: string
+                        type:
+                          type: string
+                          enum: ["popular", "category", "product", "service"]
+                        description:
+                          type: string
+                        count:
+                          type: integer
+                          description: Usage count for popular suggestions
+
+  # System Status
+  /chatbot/api/status/:
+    get:
+      tags:
+        - System
+      summary: Get chatbot system status
+      description: |
+        Get current system status and daily statistics.
+        
+        **Information Provided:**
+        - Service operational status
+        - Daily usage statistics
+        - Configuration overview
+        - Active sessions count
+      responses:
+        "200":
+          description: System status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: ["operational", "degraded", "down"]
+                  timestamp:
+                    type: string
+                    format: date-time
+                  version:
+                    type: string
+                  daily_stats:
                     type: object
                     properties:
-                      id:
+                      sessions_today:
                         type: integer
-                        example: 123
-                      email:
-                        type: string
-                        example: "user@example.com"
-                      name:
-                        type: string
-                        example: "John Doe"
-        "400":
-          description: Missing email or password
+                      messages_today:
+                        type: integer
+                      active_sessions:
+                        type: integer
+                  configuration:
+                    type: object
+                    description: Public configuration settings
+
+  /chatbot/api/health/:
+    get:
+      tags:
+        - System
+      summary: Health check endpoint
+      description: |
+        Comprehensive health check for system monitoring.
+        
+        **Checks:**
+        - Database connectivity
+        - Cache system
+        - External service availability
+        - Resource utilization
+      responses:
+        "200":
+          description: System healthy
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
-        "401":
-          description: Invalid credentials
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                  service:
+                    type: string
+                    example: "AI Chatbot"
+                  timestamp:
+                    type: string
+                    format: date-time
+                  version:
+                    type: string
+                  services:
+                    type: object
+                    properties:
+                      database:
+                        type: string
+                        enum: ["ok", "error"]
+                      cache:
+                        type: string
+                        enum: ["ok", "error"]
+                      local_search:
+                        type: string
+                        enum: ["ok", "error"]
+                      web_search:
+                        type: string
+                        enum: ["ok", "error"]
+        "500":
+          description: System unhealthy
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "unhealthy"
+                  error:
+                    type: string
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  # Analytics (Admin Only)
+  /chatbot/api/analytics/:
+    get:
+      tags:
+        - Analytics
+      summary: Get chatbot analytics (Admin only)
+      description: |
+        Retrieve comprehensive analytics data for administrative monitoring.
+        
+        **Analytics Include:**
+        - Usage patterns and trends
+        - Performance metrics
+        - User satisfaction scores
+        - Search effectiveness
+        - Popular queries and categories
+      security:
+        - TokenAuth: []
+      parameters:
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 30
+            maximum: 365
+          description: Number of days to analyze
+      responses:
+        "200":
+          description: Analytics data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  analytics:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ChatAnalytics'
+                  summary:
+                    type: object
+                    properties:
+                      date_range:
+                        type: string
+                      total_sessions:
+                        type: integer
+                      total_messages:
+                        type: integer
+                      avg_response_time:
+                        type: number
+                      days_analyzed:
+                        type: integer
+        "403":
+          description: Access denied - Admin only
+
+  # Admin Configuration
+  /chatbot/admin/configuration/:
+    get:
+      tags:
+        - Admin
+      summary: Get bot configuration (Admin only)
+      description: Retrieve current bot configuration settings
+      security:
+        - TokenAuth: []
+      responses:
+        "200":
+          description: Configuration data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  configurations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BotConfiguration'
+        "403":
+          description: Access denied
+
+    post:
+      tags:
+        - Admin
+      summary: Update bot configuration (Admin only)
+      description: Update or create bot configuration settings
+      security:
+        - TokenAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - key
+                - value
+              properties:
+                key:
+                  type: string
+                  description: Configuration key
+                  example: "max_file_size_mb"
+                value:
+                  description: Configuration value (any JSON type)
+                  example: 15
+                description:
+                  type: string
+                  description: Description of the configuration
+      responses:
+        "200":
+          description: Configuration updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  configuration:
+                    $ref: '#/components/schemas/BotConfiguration'
+
+  # Admin Sessions
+  /chatbot/admin/sessions/:
+    get:
+      tags:
+        - Admin
+      summary: Get chat sessions (Admin only)
+      description: Retrieve chat sessions with filtering and pagination
+      security:
+        - TokenAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: ["active", "inactive", "ended"]
+        - name: date_from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: date_to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Sessions data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  sessions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ChatSession'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+  # Chat Widget
+  /chatbot/widget/:
+    get:
+      tags:
+        - Widget
+      summary: Get embeddable chat widget
+      description: |
+        Get embeddable chat widget for external websites.
+        
+        **Customization Options:**
+        - Theme (light/dark)
+        - Position (bottom-right, bottom-left, etc.)
+        - Colors and branding
+        - Auto-open behavior
+        - Custom greeting messages
+      parameters:
+        - name: theme
+          in: query
+          schema:
+            type: string
+            enum: ["light", "dark"]
+            default: "light"
+        - name: position
+          in: query
+          schema:
+            type: string
+            enum: ["bottom-right", "bottom-left", "top-right", "top-left"]
+            default: "bottom-right"
+        - name: auto_open
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - name: branding
+          in: query
+          schema:
+            type: boolean
+            default: true
+        - name: color
+          in: query
+          schema:
+            type: string
+            pattern: "^#[0-9A-Fa-f]{6}$"
+            default: "#007bff"
+        - name: greeting
+          in: query
+          schema:
+            type: string
+            maxLength: 200
+            default: "Hi! How can I help you find products or services today?"
+      responses:
+        "200":
+          description: Widget HTML
+          content:
+            text/html:
+              schema:
+                type: string
 
 components:
   securitySchemes:
@@ -427,209 +987,999 @@ components:
       description: "Token-based authentication. Use format: `Token <your-token>`"
 
   schemas:
+    ChatSession:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique session identifier
+        session_id:
+          type: string
+          description: Human-readable session ID
+        user:
+          type: integer
+          nullable: true
+          description: Associated user ID (null for anonymous)
+        user_display:
+          type: string
+          description: Display name for the user
+        title:
+          type: string
+          nullable: true
+          description: Optional session title
+        status:
+          type: string
+          enum: ["active", "inactive", "ended"]
+        user_preferences:
+          type: object
+          description: User preferences and settings
+        search_context:
+          type: object
+          description: Accumulated search context
+        location_context:
+          type: object
+          description: User's location preferences
+        messages_count:
+          type: integer
+          description: Total number of messages
+        last_message:
+          type: object
+          nullable: true
+          description: Preview of last message
+        duration:
+          type: number
+          description: Session duration in minutes
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        last_activity:
+          type: string
+          format: date-time
+
     ChatMessage:
       type: object
       properties:
         id:
+          type: string
+          format: uuid
+        chat_session:
+          type: string
+          format: uuid
+        session_info:
+          type: object
+          description: Basic session information
+        message_type:
+          type: string
+          enum: ["text", "image", "voice", "file", "system"]
+        sender_type:
+          type: string
+          enum: ["user", "bot", "system"]
+        content:
+          type: string
+          description: Message content
+        image:
+          type: string
+          format: uri
+          nullable: true
+          description: Cloudinary image URL
+        voice_file:
+          type: string
+          format: uri
+          nullable: true
+          description: Cloudinary voice file URL
+        attachment:
+          type: string
+          format: uri
+          nullable: true
+          description: Cloudinary attachment URL
+        attachments:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                enum: ["image", "voice", "file"]
+              url:
+                type: string
+                format: uri
+              filename:
+                type: string
+        search_mode:
+          type: string
+          enum: ["local", "external", "hybrid"]
+          nullable: true
+        response_time:
+          type: number
+          nullable: true
+          description: Response time in seconds
+        confidence_score:
+          type: number
+          nullable: true
+          description: AI confidence score (0-1)
+        search_results_count:
           type: integer
-          description: Unique message identifier
-          example: 123
-        user_input:
+          description: Number of search results found
+        context_data:
+          type: object
+          description: Additional context and metadata
+        intent_detected:
           type: string
-          description: User's original message/input
-          example: "I'm looking for wireless headphones"
-        bot_response:
+          nullable: true
+          description: Detected user intent
+        entities_extracted:
+          type: array
+          description: Extracted entities from message
+        has_search_results:
+          type: boolean
+          description: Whether message has associated search results
+        feedback_summary:
+          type: object
+          nullable: true
+          description: Feedback summary for bot messages
+        is_active:
+          type: boolean
+        is_edited:
+          type: boolean
+        created_at:
           type: string
-          description: Bot's response to the user
-          example: "I found these wireless headphones on Finda..."
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ChatResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message_id:
+          type: string
+          format: uuid
+        session_id:
+          type: string
+          format: uuid
+        response:
+          type: string
+          description: Bot's response text
+        message_type:
+          type: string
+          default: "text"
+        metadata:
+          type: object
+          properties:
+            processing_time:
+              type: number
+              description: Processing time in seconds
+            search_strategy:
+              type: string
+              enum: ["local_only", "external_only", "hybrid", "image_analysis", "voice_processing"]
+            confidence_score:
+              type: number
+              description: AI confidence score (0-1)
+            services_used:
+              type: array
+              items:
+                type: string
+              description: List of services used in processing
+            has_external_results:
+              type: boolean
+        search_results:
+          type: object
+          properties:
+            local:
+              type: object
+              properties:
+                products:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ProductSummary'
+                services:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ServiceSummary'
+                total:
+                  type: integer
+            external:
+              type: object
+              properties:
+                products:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ExternalProduct'
+                services:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ExternalService'
+                total:
+                  type: integer
+        suggested_actions:
+          type: array
+          items:
+            type: object
+            properties:
+              action:
+                type: string
+              label:
+                type: string
+              description:
+                type: string
+        tts_audio:
+          type: object
+          nullable: true
+          properties:
+            audio_url:
+              type: string
+              format: uri
+              nullable: true
+            duration:
+              type: number
+            format:
+              type: string
+            message:
+              type: string
         timestamp:
           type: string
           format: date-time
-          description: When the message was created
-          example: "2024-01-15T14:30:00Z"
-        is_voice_message:
-          type: boolean
-          description: Whether this was a voice message
-          example: false
-        is_image_message:
-          type: boolean
-          description: Whether this was an image search
-          example: false
-        audio_file:
-          type: string
-          format: uri
-          nullable: true
-          description: URL to uploaded audio file
-          example: "https://yourdomain.com/media/voice_messages/msg_123.mp3"
-        image_file:
-          type: string
-          format: uri
-          nullable: true
-          description: URL to uploaded image file
-          example: "https://yourdomain.com/media/image_searches/img_123.jpg"
-        transcript:
-          type: string
-          description: Transcribed text from voice message
-          example: "Looking for wireless headphones"
-        image_analysis:
-          type: string
-          description: AI analysis results from image
-          example: "White Nike sneakers with swoosh logo"
-        voice_response_url:
-          type: string
-          format: uri
-          description: URL to generated voice response
-          example: "https://yourdomain.com/media/voice_responses/resp_123.mp3"
 
-    VoiceSettings:
+    ProductSummary:
       type: object
-      properties:
-        preferred_language:
-          type: string
-          description: Preferred language for voice responses
-          enum: 
-            - "en"
-            - "fr" 
-            - "es"
-            - "de"
-            - "it"
-            - "pt"
-            - "ru"
-            - "ar"
-            - "zh"
-            - "ja"
-            - "ko"
-            - "hi"
-          default: "en"
-          example: "en"
-        voice_speed:
-          type: number
-          format: float
-          description: Speech speed multiplier (0.5 = slow, 1.0 = normal, 2.0 = fast)
-          minimum: 0.5
-          maximum: 2.0
-          default: 1.0
-          example: 1.0
-        voice_enabled:
-          type: boolean
-          description: Whether voice responses are enabled
-          default: true
-          example: true
-
-    VoiceSettingsUpdate:
-      type: object
-      properties:
-        preferred_language:
-          type: string
-          description: Preferred language for voice responses
-          enum: 
-            - "en"
-            - "fr"
-            - "es" 
-            - "de"
-            - "it"
-            - "pt"
-            - "ru"
-            - "ar"
-            - "zh"
-            - "ja"
-            - "ko"
-            - "hi"
-          example: "en"
-        voice_speed:
-          type: number
-          format: float
-          description: Speech speed multiplier
-          minimum: 0.5
-          maximum: 2.0
-          example: 1.2
-        voice_enabled:
-          type: boolean
-          description: Enable or disable voice responses
-          example: true
-
-    Product:
-      type: object
-      description: Simplified product representation in chat responses
       properties:
         id:
           type: integer
-          example: 123
         name:
           type: string
-          example: "Nike Air Max 270"
+        description:
+          type: string
         price:
           type: number
-          example: 45000
+        formatted_price:
+          type: string
+          example: "₦45,000"
+        currency:
+          type: string
+          default: "NGN"
+        image:
+          type: string
+          format: uri
+          nullable: true
+        condition:
+          type: string
+        brand:
+          type: string
+          nullable: true
+        location:
+          type: object
+        category:
+          type: object
+        seller:
+          type: object
+        rating:
+          type: object
+          properties:
+            average:
+              type: number
+            count:
+              type: integer
+        stats:
+          type: object
+        features:
+          type: object
         url:
           type: string
           format: uri
-          example: "https://yourdomain.com/products/123/"
-        rating:
-          type: number
-          format: float
-          example: 4.5
+        type:
+          type: string
+          default: "product"
 
-    Error:
+    ServiceSummary:
       type: object
       properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        price_range:
+          type: string
+          example: "₦10,000 - ₦50,000"
+        price_type:
+          type: string
+          enum: ["fixed", "hourly", "daily", "negotiable"]
+        currency:
+          type: string
+          default: "NGN"
+        image:
+          type: string
+          format: uri
+          nullable: true
+        location:
+          type: object
+        category:
+          type: object
+        provider:
+          type: object
+        rating:
+          type: object
+          properties:
+            average:
+              type: number
+            count:
+              type: integer
+        stats:
+          type: object
+        features:
+          type: object
+        url:
+          type: string
+          format: uri
+        type:
+          type: string
+          default: "service"
+
+    ExternalProduct:
+      type: object
+      properties:
+        title:
+          type: string
+        url:
+          type: string
+          format: uri
+        description:
+          type: string
+        price:
+          type: string
+          nullable: true
+          example: "$199"
+        image_url:
+          type: string
+          format: uri
+          nullable: true
+        source:
+          type: string
+          example: "Amazon"
+        confidence:
+          type: number
+          description: Relevance confidence (0-1)
+        link_verified:
+          type: boolean
+
+    ExternalService:
+      type: object
+      properties:
+        title:
+          type: string
+        url:
+          type: string
+          format: uri
+        description:
+          type: string
+        price_info:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        source:
+          type: string
+        confidence:
+          type: number
+        provider_info:
+          type: object
+          nullable: true
+
+    SearchQuery:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        chat_message:
+          type: string
+          format: uuid
+        message_info:
+          type: object
+          description: Basic message information
+        query_text:
+          type: string
+        search_type:
+          type: string
+          enum: ["product", "service", "mixed", "general"]
+        source_used:
+          type: string
+          enum: ["local_db", "gemini_web", "both"]
+        filters:
+          type: object
+          description: Applied search filters
+        location_context:
+          type: object
+        local_results_count:
+          type: integer
+        external_results_count:
+          type: integer
+        total_results_shown:
+          type: integer
+        search_duration:
+          type: number
+          nullable: true
+          description: Search time in seconds
+        success_rate:
+          type: number
+          description: Calculated success rate (0-1)
+        results_preview:
+          type: array
+          items:
+            type: object
+            properties:
+              title:
+                type: string
+              result_type:
+                type: string
+              relevance_score:
+                type: number
+              position:
+                type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    SearchResult:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        search_query:
+          type: string
+          format: uuid
+        query_info:
+          type: object
+        result_type:
+          type: string
+          enum: ["product", "service", "external_product", "information"]
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        url:
+          type: string
+          format: uri
+          nullable: true
+        image_url:
+          type: string
+          format: uri
+          nullable: true
+        content_type:
+          type: integer
+          nullable: true
+          description: Django ContentType ID for local results
+        object_id:
+          type: integer
+          nullable: true
+          description: Object ID for local results
+        external_data:
+          type: object
+          description: Full external result data
+        price_info:
+          type: object
+        location_info:
+          type: object
+        relevance_score:
+          type: number
+          description: Relevance score (0-1)
+        position:
+          type: integer
+          description: Position in search results
+        click_count:
+          type: integer
+        was_clicked:
+          type: boolean
+        is_local_result:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    UserFeedback:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        chat_message:
+          type: string
+          format: uuid
+        message_info:
+          type: object
+        user:
+          type: integer
+          nullable: true
+        user_display:
+          type: string
+        feedback_type:
+          type: string
+          enum: ["thumbs_up", "thumbs_down", "rating", "comment"]
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          nullable: true
+        comment:
+          type: string
+          nullable: true
+        accuracy_rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          nullable: true
+        helpfulness_rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          nullable: true
+        speed_rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          nullable: true
+        ip_address:
+          type: string
+          format: ipv4
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    ChatAnalytics:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        total_sessions:
+          type: integer
+        total_messages:
+          type: integer
+        unique_users:
+          type: integer
+        anonymous_users:
+          type: integer
+        total_searches:
+          type: integer
+        local_searches:
+          type: integer
+        external_searches:
+          type: integer
+        successful_searches:
+          type: integer
+        average_response_time:
+          type: number
+        average_session_duration:
+          type: number
+        positive_feedback:
+          type: integer
+        negative_feedback:
+          type: integer
+        average_rating:
+          type: number
+        top_search_categories:
+          type: array
+          items:
+            type: string
+        top_search_terms:
+          type: array
+          items:
+            type: string
+        usage_summary:
+          type: object
+          properties:
+            total_interactions:
+              type: integer
+            user_ratio:
+              type: object
+              properties:
+                authenticated:
+                  type: integer
+                anonymous:
+                  type: integer
+                total:
+                  type: integer
+            search_distribution:
+              type: object
+              properties:
+                local:
+                  type: integer
+                external:
+                  type: integer
+                total:
+                  type: integer
+        performance_summary:
+          type: object
+          properties:
+            avg_response_time:
+              type: number
+            avg_session_duration:
+              type: number
+            search_success_rate:
+              type: number
+        feedback_summary:
+          type: object
+          properties:
+            total_feedback:
+              type: integer
+            satisfaction_rate:
+              type: number
+            average_rating:
+              type: number
+            feedback_distribution:
+              type: object
+              properties:
+                positive:
+                  type: integer
+                negative:
+                  type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    BotConfiguration:
+      type: object
+      properties:
+        key:
+          type: string
+          description: Configuration key
+          example: "max_file_size_mb"
+        value:
+          description: Configuration value (any JSON type)
+          example: 10
+        value_preview:
+          type: string
+          description: String preview of the value
+        description:
+          type: string
+          nullable: true
+          description: Configuration description
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_count:
+          type: integer
+        total_pages:
+          type: integer
+        has_next:
+          type: boolean
+        has_previous:
+          type: boolean
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          default: false
         error:
           type: string
           description: Error message
-          example: "No image provided"
-        detail:
+        error_code:
           type: string
-          description: Detailed error information
-          example: "Please send a non-empty message."
+          description: Specific error code
+        details:
+          type: object
+          description: Additional error details
+        timestamp:
+          type: string
+          format: date-time
 
     ValidationError:
       type: object
       properties:
-        field_name:
-          type: array
-          items:
-            type: string
-          description: List of validation errors for the field
-          example: ["This field is required."]
-      additionalProperties:
-        type: array
-        items:
+        success:
+          type: boolean
+          default: false
+        error:
           type: string
-      example:
-        preferred_language: ["Select a valid choice. 'invalid' is not one of the available choices."]
-        voice_speed: ["Ensure this value is greater than or equal to 0.5."]
+          default: "Validation failed"
+        details:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            message: ["This field is required."]
+            message_type: ["Select a valid choice."]
 
-# Example conversations for testing
-examples:
-  greeting_conversation:
-    summary: "Basic greeting flow"
-    value:
-      user: "Hi there!"
-      bot: "Hello, welcome to Finda! What can we help you find today?"
+# Usage Examples and Integration Guide
+x-examples:
+  basic_chat_flow:
+    summary: "Basic chat conversation"
+    description: "Complete flow from greeting to product search"
+    steps:
+      - step: "Initial greeting"
+        request:
+          method: POST
+          url: "/chatbot/api/chat/"
+          body:
+            message: "Hello"
+        response:
+          success: true
+          response: "Hello! Welcome to Finda. I'm your AI shopping assistant. What can I help you find today?"
+          suggested_actions:
+            - action: "browse_categories"
+              label: "Browse categories"
+            - action: "voice_search"
+              label: "Try voice search"
+
+      - step: "Product search"
+        request:
+          method: POST
+          url: "/chatbot/api/chat/"
+          body:
+            message: "I need a gaming laptop under 500k"
+            session_id: "123e4567-e89b-12d3-a456-426614174000"
+        response:
+          success: true
+          response: "I found these gaming laptops on Finda within your budget..."
+          search_results:
+            local:
+              products: 
+                - name: "ASUS TUF Gaming F15"
+                  price: 450000
+                  formatted_price: "₦450,000"
+              total: 3
+            external:
+              total: 12
+
+  image_search_flow:
+    summary: "Image-based product search"
+    description: "Upload image and get similar products"
+    steps:
+      - step: "Image upload"
+        request:
+          method: POST
+          url: "/chatbot/api/upload/image/"
+          content_type: "multipart/form-data"
+          body:
+            image: "[binary_image_data]"
+            message: "Find similar shoes"
+        response:
+          success: true
+          image_analysis:
+            description: "White Nike Air Force 1 sneakers"
+            confidence: 0.92
+
+      - step: "Continue conversation"
+        request:
+          method: POST
+          url: "/chatbot/api/chat/"
+          body:
+            message: "Show me more white sneakers"
+            session_id: "existing_session_id"
+
+  voice_interaction_flow:
+    summary: "Voice message processing"
+    description: "Voice note to chat conversion"
+    steps:
+      - step: "Voice upload"
+        request:
+          method: POST
+          url: "/chatbot/api/upload/voice/"
+          content_type: "multipart/form-data"
+          body:
+            voice: "[binary_audio_data]"
+            language: "en"
+        response:
+          success: true
+          transcription:
+            text: "I'm looking for wireless headphones"
+            confidence: 0.94
+            language: "en"
+
+  admin_analytics_flow:
+    summary: "Admin analytics access"
+    description: "Retrieve and analyze bot performance"
+    steps:
+      - step: "Get analytics"
+        request:
+          method: GET
+          url: "/chatbot/api/analytics/?days=7"
+          headers:
+            Authorization: "Token your_admin_token"
+        response:
+          success: true
+          summary:
+            total_sessions: 1250
+            total_messages: 4800
+            avg_response_time: 1.3
+
+# Integration Examples
+x-integration-examples:
+  javascript_client:
+    description: "Basic JavaScript client integration"
+    code: |
+      class FindaChatbot {
+        constructor(baseUrl, token = null) {
+          this.baseUrl = baseUrl;
+          this.token = token;
+          this.sessionId = null;
+        }
+        
+        async sendMessage(message, options = {}) {
+          const response = await fetch(`${this.baseUrl}/chatbot/api/chat/`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(this.token && { 'Authorization': `Token ${this.token}` })
+            },
+            body: JSON.stringify({
+              message,
+              session_id: this.sessionId,
+              ...options
+            })
+          });
+          
+          const data = await response.json();
+          if (data.session_id) {
+            this.sessionId = data.session_id;
+          }
+          return data;
+        }
+        
+        async uploadImage(imageFile, message = "") {
+          const formData = new FormData();
+          formData.append('image', imageFile);
+          formData.append('message', message);
+          
+          const response = await fetch(`${this.baseUrl}/chatbot/api/upload/image/`, {
+            method: 'POST',
+            body: formData
+          });
+          
+          return response.json();
+        }
+      }
+
+  python_client:
+    description: "Python client example"
+    code: |
+      import requests
       
-  product_search:
-    summary: "Product search with results"
-    value:
-      user: "I need iPhone 14"
-      bot: "I found these on Finda:\n- iPhone 14 Pro — ₦450,000\n  Link: https://yourdomain.com/products/123/\n\nWould you also like suggestions from external stores?"
-      
-  browse_request:
-    summary: "Category browsing"
-    value:
-      user: "What do you have?"
-      bot: "Sure! Here are some categories you can explore:\n- Electronics\n- Fashion\n- Health & Beauty\n\nOr just type in what you're looking for!"
-      
-  voice_interaction:
-    summary: "Voice message flow"
-    value:
-      audio_upload: "user_voice.mp3"
-      transcript: "Looking for gaming laptop"
-      bot_response: "I found these gaming laptops on Finda..."
-      voice_response_url: "https://yourdomain.com/media/voice_responses/resp_456.mp3"
-      
-  image_search:
-    summary: "Image search flow"  
-    value:
-      image_upload: "shoe_photo.jpg"
-      analysis: "White Nike Air Force 1 sneakers"
-      bot_response: "Based on your image, I found these on Finda:\n- Nike Air Force 1 White — ₦42,000"
+      class FindaChatbotClient:
+          def __init__(self, base_url, token=None):
+              self.base_url = base_url
+              self.token = token
+              self.session_id = None
+              self.headers = {'Authorization': f'Token {token}'} if token else {}
+          
+          def send_message(self, message, **kwargs):
+              data = {
+                  'message': message,
+                  'session_id': self.session_id,
+                  **kwargs
+              }
+              
+              response = requests.post(
+                  f'{self.base_url}/chatbot/api/chat/',
+                  json=data,
+                  headers=self.headers
+              )
+              
+              result = response.json()
+              if result.get('session_id'):
+                  self.session_id = result['session_id']
+              
+              return result
+          
+          def quick_search(self, query):
+              return requests.post(
+                  f'{self.base_url}/chatbot/api/search/',
+                  json={'message': query},
+                  headers=self.headers
+              ).json()
+
+  widget_embed:
+    description: "Embeddable widget HTML"
+    code: |
+      <iframe 
+        src="https://finda-backend.onrender.com/chatbot/widget/?theme=light&position=bottom-right&color=%23007bff"
+        width="400" 
+        height="600" 
+        frameborder="0"
+        title="Finda AI Assistant">
+      </iframe>
+
+# Rate Limits and Quotas
+x-rate-limits:
+  anonymous_users:
+    description: "Rate limits for non-authenticated users"
+    limits:
+      chat_messages: "100 requests per hour"
+      image_uploads: "20 requests per hour"
+      voice_uploads: "30 requests per hour"
+      quick_search: "200 requests per hour"
+  
+  authenticated_users:
+    description: "Rate limits for authenticated users"
+    limits:
+      chat_messages: "500 requests per hour"
+      image_uploads: "100 requests per hour"
+      voice_uploads: "150 requests per hour"
+      quick_search: "1000 requests per hour"
+  
+  admin_users:
+    description: "Rate limits for admin users"
+    limits:
+      all_endpoints: "No limits"
+      analytics: "Unlimited access"
+
+# File Size Limits
+x-file-limits:
+  image_files:
+    max_size: "10MB"
+    supported_formats: ["JPEG", "PNG", "GIF", "WebP", "BMP"]
+    recommended_size: "Under 5MB for optimal processing"
+  
+  voice_files:
+    max_size: "25MB"
+    supported_formats: ["MP3", "WAV", "OGG", "WebM", "MP4", "M4A", "FLAC"]
+    recommended_duration: "Under 5 minutes"
+
+# Webhook Support (Future Feature)
+x-webhooks:
+  message_received:
+    description: "Triggered when a new message is received"
+    payload:
+      type: object
+      properties:
+        event:
+          type: string
+          example: "message.received"
+        session_id:
+          type: string
+        message_id:
+          type: string
+        content:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+  session_ended:
+    description: "Triggered when a chat session ends"
+    payload:
+      type: object
+      properties:
+        event:
+          type: string
+          example: "session.ended"
+        session_id:
+          type: string
+        duration:
+          type: number
+        message_count:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
